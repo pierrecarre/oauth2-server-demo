@@ -9,13 +9,14 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
-import java.util.Collection;
-import java.util.List;
+import javax.sql.DataSource;
+import java.util.Collections;
 
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -23,33 +24,16 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private final PasswordEncoder passwordEncoder;
 
-    private UserDetailsService userDetailsService;
-
-    public WebSecurityConfiguration(final PasswordEncoder passwordEncoder) {
+    public WebSecurityConfiguration(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService())
-                .passwordEncoder(passwordEncoder);
-        super.configure(auth);
+        auth.inMemoryAuthentication()
+                .withUser("test")
+                .password(passwordEncoder.encode("test"))
+                .roles("USER");
     }
 
-    @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
-
-    @Bean
-    @Override
-    protected UserDetailsService userDetailsService() {
-        if (null == this.userDetailsService) {
-            this.userDetailsService = new InMemoryUserDetailsManager();
-            User user = new User("test", "test", List.of());
-            ((InMemoryUserDetailsManager) this.userDetailsService).createUser(user);
-        }
-        return this.userDetailsService;
-    }
 }
